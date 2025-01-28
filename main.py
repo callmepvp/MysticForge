@@ -382,12 +382,26 @@ while running:
             material_x = upgrade_rect_x - material_square_size - material_square_margin  # Position it just to the left of the upgrade rectangle
             material_y = upgrade_rect_y + (upgrade_rect_height // 2) - (material_square_size * 3) // 2  # Center them vertically
 
-            # Example material colors for the upgrade materials (these should be the colors of the materials in your material inventory)
-            upgrade_material_colors = [DARK_GRAY, GREEN, BLUE]  # Add more colors as needed for the materials
+            for row in range(materials_inventory.rows):
+                for col in range(materials_inventory.cols):
+                    material = materials_inventory.slots[row][col] 
 
-            for idx, color in enumerate(upgrade_material_colors):
-                # Draw each small square
-                pygame.draw.rect(screen, color, (material_x, material_y + idx * (material_square_size + material_square_margin)-1.5, material_square_size, material_square_size))
+                    if material:
+                        # Get the position of each material square in the upgrade popup
+                        material_rect = pygame.Rect(material_x, material_y + (col * (material_square_size + material_square_margin))-1.5, material_square_size, material_square_size)
+
+                        # Draw material square and border
+                        pygame.draw.rect(screen, material.color, material_rect)
+                        pygame.draw.rect(screen, BLACK, material_rect, 2)  # Border for the material square
+
+                        # Show the quantity inside the square
+                        quantity_text = FONT.render(f"{material.quantity}", True, BLACK)
+                        text_x = material_rect.centerx - quantity_text.get_width() // 2
+                        text_y = material_rect.centery - quantity_text.get_height() // 2
+
+                        # Blit the quantity text at the calculated position
+                        screen.blit(quantity_text, (text_x, text_y))
+
 
     pygame.display.flip()
     clock.tick(60)
