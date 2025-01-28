@@ -23,8 +23,11 @@ class Inventory:
                 if item:
                     item.rect.topleft = (x + 5, y + 5)
                     pygame.draw.rect(surface, item.color, item.rect)
-                    text = FONT.render(item.name, True, BLACK)
-                    surface.blit(text, (x + 10, y + SLOT_SIZE - 20))
+
+                    item_name_text = FONT.render(item.name, True, BLACK)
+                    item_name_text_x = item.rect.centerx - item_name_text.get_width() // 2
+                    item_name_text_y = item.rect.bottom - item_name_text.get_height() - 5  # 5 pixels above the bottom
+                    surface.blit(item_name_text, (item_name_text_x, item_name_text_y))
 
     def add_item(self, item, row, col):
         if self.slots[row][col] is None:

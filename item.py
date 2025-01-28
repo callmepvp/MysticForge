@@ -29,9 +29,9 @@ class Material:
 
     def set_color(self):
         if self.rarity == "Common":
-            return (150, 150, 150)
+            return DARK_GRAY
         elif self.rarity == "Rare":
-            return (100, 200, 100)
+            return GREEN
         elif self.rarity == "Epic":
-            return (50, 100, 200)
+            return BLUE
         return (255, 255, 255)  # Default white for others
