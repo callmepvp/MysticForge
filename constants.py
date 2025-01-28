@@ -1,8 +1,9 @@
 # Main imports
 import pygame
 
-# Screen dimensions
+# Game settings
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+GAME_NAME = "Mystic Forge"
 
 # Colors
 WHITE = (255, 255, 255)
@@ -44,6 +45,23 @@ TAB_SIZE = 40
 TAB_MARGIN = 10
 TAB_X = SCREEN_WIDTH - TAB_SIZE - TAB_MARGIN
 TAB_Y = TAB_MARGIN
+
+# Data arrays
+RARITY_MULTIPLIERS = {
+    "Common": 1,
+    "Rare": 2,
+    "Epic": 3,
+    "Legendary": 4,
+    "Mythic": 5
+}
+
+QUALITY_MULTIPLIERS = {
+    "Poor": 1,
+    "Bad": 1.5,
+    "Average": 2,
+    "Good": 3,
+    "Excellent": 5
+}
 
 # Testing settings (might change)
 BUTTON_Y = INVENTORY_Y + (INVENTORY_ROWS * (SLOT_SIZE + SLOT_MARGIN)) + 30
