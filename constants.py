@@ -8,6 +8,8 @@ GAME_NAME = "Mystic Forge"
 # Colors
 WHITE = (255, 255, 255)
 GRAY = (200, 200, 200)
+LIGHT_GRAY = (220, 220, 220)
+DARK_GRAY = (150, 150, 150)
 BLACK = (0, 0, 0)
 BLUE = (100, 149, 237)
 RED = (237, 100, 100)

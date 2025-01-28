@@ -88,3 +88,18 @@ class GridInventory:
                 if index < len(materials):
                     self.slots[row][col] = materials[index]
                     index += 1
+
+class ForgeInventory:
+    def __init__(self, rows, cols):
+        self.rows = rows
+        self.cols = cols
+        self.slots = [[None for _ in range(cols)] for _ in range(rows)]  # 2x5 grid
+
+    def add_item_in_first_empty(self, item):
+        # Try to place the item in the first empty slot in the inventory
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if self.slots[row][col] is None:  # Empty slot
+                    self.slots[row][col] = item
+                    return True  # Successfully added
+        return False  # Inventory is full

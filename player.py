@@ -2,20 +2,23 @@
 # Other imports
 from constants import *
 from utils import calculate_valor
-from inventory import Inventory, GridInventory
+from inventory import Inventory, GridInventory, ForgeInventory
 
 class Player:
     def __init__(self):
         self.coins = 0  # Starting coins
         self.valor = 0  # Starting valor
         
+        self.original_rects = {} 
         self.current_tab = "I"
         self.tabs = {
             "I": {
                 "inventory": Inventory(INVENTORY_ROWS, INVENTORY_COLS),
                 "materials": GridInventory(1, 3)
             },
-            "F": {}
+            "F": {
+                "inventory": ForgeInventory(rows=INVENTORY_COLS, cols=INVENTORY_ROWS)
+            }
         }
 
     def update_coins(self, amount):

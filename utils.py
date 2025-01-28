@@ -27,3 +27,7 @@ def draw_tabs(screen, player):
     tab_f_text = font.render("F", True, BLACK)
     screen.blit(tab_i_text, (tab_inventory_rect.centerx - tab_i_text.get_width() // 2, tab_inventory_rect.centery - tab_i_text.get_height() // 2))
     screen.blit(tab_f_text, (tab_forge_rect.centerx - tab_f_text.get_width() // 2, tab_forge_rect.centery - tab_f_text.get_height() // 2))
+
+def sort_items_by_rarity(items):
+    rarity_order = ["Mythic", "Legendary", "Epic", "Rare", "Common"]
+    return sorted(items, key=lambda item: rarity_order.index(item.rarity))

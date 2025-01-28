@@ -7,7 +7,7 @@ import copy
 # Other imports
 from constants import *
 from player import Player
-from utils import draw_tabs
+from utils import draw_tabs, sort_items_by_rarity
 from item import Item, Material
 
 # Game setup
@@ -17,8 +17,8 @@ pygame.display.set_caption(GAME_NAME)
 # Materials & items
 #### Upgrade Rocks
 rock_1 = Material("Stone", "Common")
-rock_2 = Material("Iron", "Uncommon")
-rock_3 = Material("Diamond", "Rare")
+rock_2 = Material("Iron", "Rare")
+rock_3 = Material("Diamond", "Epic")
 
 materials = [rock_1, rock_2, rock_3]
 
@@ -26,7 +26,7 @@ materials = [rock_1, rock_2, rock_3]
 available_items = [
     Item("Sword", RED, rarity="Common", quality="Poor"),
     Item("Shield", BLUE, rarity="Rare", quality="Good"),
-    Item("Bow", BLUE, rarity="Uncommon", quality="Average"),
+    Item("Bow", BLUE, rarity="Common", quality="Average"),
     Item("Potion", RED, rarity="Common", quality="Bad"),
     Item("Helmet", BLUE, rarity="Legendary", quality="Excellent"),
     Item("Chestp", RED, rarity="Mythic", quality="Excellent")
@@ -37,6 +37,8 @@ player = Player()
 inventory = player.tabs["I"]["inventory"]
 materials_inventory = player.tabs["I"]["materials"]
 materials_inventory.fill_with_materials(materials)
+
+forge_inventory = player.tabs["F"]["inventory"]
 
 # Main game loop
 clock = pygame.time.Clock()
@@ -112,7 +114,7 @@ def handle_item_button_click(event):
 # Handle hovering over an item and displaying the info box
 def handle_item_hover(mouse_pos):
     hovered_item = None
-    if not dragged_item and player.current_tab == "I":  # Only detect hover if on the Inventory tab
+    if not dragged_item and player.current_tab == "I":
         for row in range(INVENTORY_ROWS):
             for col in range(INVENTORY_COLS):
                 item = inventory.slots[row][col]
@@ -121,6 +123,18 @@ def handle_item_hover(mouse_pos):
                     break
             if hovered_item:
                 break
+
+    # Hover detection in Forge Inventory (F tab)
+    if not dragged_item and player.current_tab == "F":
+        for row in range(forge_inventory.rows):
+            for col in range(forge_inventory.cols):
+                item = forge_inventory.slots[row][col]
+                if item and item.rect.collidepoint(mouse_pos):
+                    hovered_item = item
+                    break
+            if hovered_item:
+                break
+
     return hovered_item
 
 # Handle tab switching
@@ -129,16 +143,65 @@ def handle_tab_switching(event):
         mouse_pos = pygame.mouse.get_pos()
 
         # Handle tab switching (Inventory tab)
-        if tab_inventory_rect.collidepoint(mouse_pos):
+        if tab_inventory_rect.collidepoint(mouse_pos) and player.current_tab != "I":
             player.current_tab = "I"
 
+            # Restore item rects to original inventory positions when switching back to "I"
+            for row in range(INVENTORY_ROWS):
+                for col in range(INVENTORY_COLS):
+                    item = inventory.slots[row][col]
+                    if item:
+                        item.rect = player.original_rects.get(id(item), None)
+
+            # Clear the forge inventory of all items
+            for row in range(forge_inventory.rows):
+                for col in range(forge_inventory.cols):
+                    forge_inventory.slots[row][col] = None
+
         # Handle tab switching (Forge tab)
-        if tab_forge_rect.collidepoint(mouse_pos):
+        if tab_forge_rect.collidepoint(mouse_pos) and player.current_tab != "F":
             player.current_tab = "F"
 
+            player_items = []
+            for row in range(INVENTORY_ROWS):
+                for col in range(INVENTORY_COLS):
+                    item = inventory.slots[row][col]  # Fetch each item
+                    if item:
+                        player_items.append(item)
+                        player.original_rects[id(item)] = copy.deepcopy(item.rect)
+
+            # Add items to the Forge Inventory
+            for item in player_items:
+                if not forge_inventory.add_item_in_first_empty(item):
+                    print("Forge inventory is full!")
 
 
+###### FORGE FUNCTIONS
+def draw_forge_inventory(screen, forge_inventory):
+    x_offset = 20  # Margin from the left
+    y_offset = 50  # Margin from the top
 
+    # Loop through the forge inventory and draw the sorted items
+    sorted_items = sort_items_by_rarity([item for row in forge_inventory.slots for item in row if item])
+
+    background_width = (SLOT_SIZE + SLOT_MARGIN) * forge_inventory.cols + SLOT_MARGIN
+    background_height = (SLOT_SIZE + SLOT_MARGIN) * forge_inventory.rows + SLOT_MARGIN
+    background_rect = pygame.Rect(x_offset - 10, y_offset - 10, background_width, background_height)
+    pygame.draw.rect(screen, LIGHT_GRAY, background_rect)
+
+    for idx, item in enumerate(sorted_items):
+        row = idx // forge_inventory.cols
+        col = idx % forge_inventory.cols
+        x = x_offset + col * (SLOT_SIZE + SLOT_MARGIN)
+        y = y_offset + row * (SLOT_SIZE + SLOT_MARGIN)
+
+        if item:
+            item.rect = pygame.Rect(x, y, SLOT_SIZE, SLOT_SIZE)
+
+            pygame.draw.rect(screen, BLACK, (x, y, SLOT_SIZE, SLOT_SIZE), 2)
+            pygame.draw.rect(screen, item.color, (x + 5, y + 5, SLOT_SIZE - 10, SLOT_SIZE - 10))
+            text = FONT.render(f"{item.name}", True, BLACK)
+            screen.blit(text, (x + 10, y + SLOT_SIZE - 20))
 
 ###### MAIN CYCLE
 while running:
@@ -158,14 +221,17 @@ while running:
 
     # Draw everything
     screen.fill(WHITE)
-
     draw_tabs(screen, player)
 
     # Draw the appropriate tab content
     if player.current_tab == "I":
+        # Infobox background
+        background_rect = pygame.Rect(INFO_BOX_X - 10, INFO_BOX_Y - 10, 220, 180)
+        pygame.draw.rect(screen, LIGHT_GRAY, background_rect)
+
         # Draw Inventory header
         header_text = HEADER_FONT.render("Inventory", True, BLACK)
-        header_text_rect = header_text.get_rect(center=(SCREEN_WIDTH // 2, INVENTORY_Y - 50))  # Centered above inventory
+        header_text_rect = header_text.get_rect(center=(SCREEN_WIDTH // 2, INVENTORY_Y - 50))
         screen.blit(header_text, header_text_rect)
 
         # Draw the coins and valor count
@@ -187,9 +253,10 @@ while running:
         material_label_text = FONT.render("Materials", True, BLACK)
         screen.blit(material_label_text, (MATERIALS_X, MATERIALS_Y - 25))
     elif player.current_tab == "F":
-        # Draw "Forge" text
-        forge_text = FONT.render("Forge", True, BLACK)
-        screen.blit(forge_text, (SCREEN_WIDTH // 2 - forge_text.get_width() // 2, 100))  # Center the "Forge" title
+        # Infobox background
+        background_rect = pygame.Rect(INFO_BOX_X - 10, INFO_BOX_Y - 10, 220, 180)
+        pygame.draw.rect(screen, LIGHT_GRAY, background_rect)
+        draw_forge_inventory(screen, forge_inventory)
 
     # Draw dragged item
     if dragged_item and dragged_item.dragging:
