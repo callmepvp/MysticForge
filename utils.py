@@ -16,18 +16,14 @@ def calculate_valor(item):
     
     return valor
 
+def draw_tabs(screen, player):
+    # Draw tabs with active highlighting
+    pygame.draw.rect(screen, TAB_COLOR_ACTIVE if player.current_tab == "I" else TAB_COLOR_INACTIVE, tab_inventory_rect)
+    pygame.draw.rect(screen, TAB_COLOR_ACTIVE if player.current_tab == "F" else TAB_COLOR_INACTIVE, tab_forge_rect)
 
-def draw_tabs(surface):
-    # Draw "I" tab
-    tab_i_rect = pygame.Rect(TAB_X, TAB_Y, TAB_SIZE, TAB_SIZE)
-    pygame.draw.rect(surface, GRAY, tab_i_rect)
-    pygame.draw.rect(surface, BLACK, tab_i_rect, 2)  # Border
-    tab_i_text = FONT.render("I", True, BLACK)
-    surface.blit(tab_i_text, (TAB_X + TAB_SIZE // 4, TAB_Y + TAB_SIZE // 4))
-
-    # Draw "F" tab
-    tab_f_rect = pygame.Rect(TAB_X, TAB_Y + TAB_SIZE + TAB_MARGIN, TAB_SIZE, TAB_SIZE)
-    pygame.draw.rect(surface, GRAY, tab_f_rect)
-    pygame.draw.rect(surface, BLACK, tab_f_rect, 2)  # Border
-    tab_f_text = FONT.render("F", True, BLACK)
-    surface.blit(tab_f_text, (TAB_X + TAB_SIZE // 4, TAB_Y + TAB_SIZE + TAB_MARGIN + TAB_SIZE // 4))
+    # Draw "I" and "F" text
+    font = pygame.font.Font(None, 36)
+    tab_i_text = font.render("I", True, BLACK)
+    tab_f_text = font.render("F", True, BLACK)
+    screen.blit(tab_i_text, (tab_inventory_rect.centerx - tab_i_text.get_width() // 2, tab_inventory_rect.centery - tab_i_text.get_height() // 2))
+    screen.blit(tab_f_text, (tab_forge_rect.centerx - tab_f_text.get_width() // 2, tab_forge_rect.centery - tab_f_text.get_height() // 2))

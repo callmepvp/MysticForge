@@ -46,6 +46,20 @@ TAB_MARGIN = 10
 TAB_X = SCREEN_WIDTH - TAB_SIZE - TAB_MARGIN
 TAB_Y = TAB_MARGIN
 
+TAB_COLOR_ACTIVE = (200, 200, 200)
+TAB_COLOR_INACTIVE = (150, 150, 150)
+TAB_WIDTH, TAB_HEIGHT = 50, 50
+
+# Testing settings (might change)
+BUTTON_Y = INVENTORY_Y + (INVENTORY_ROWS * (SLOT_SIZE + SLOT_MARGIN)) + 30
+
+# Rectangles
+tab_inventory_rect = pygame.Rect(SCREEN_WIDTH - TAB_WIDTH * 2 - 10, 10, TAB_WIDTH, TAB_HEIGHT)
+tab_forge_rect = pygame.Rect(SCREEN_WIDTH - TAB_WIDTH - 5, 10, TAB_WIDTH, TAB_HEIGHT)
+
+button_rect = pygame.Rect(INVENTORY_X + (SLOT_SIZE + SLOT_MARGIN) * 2, BUTTON_Y, 100, 40)  # Define button rect
+button_text = FONT.render("Item", True, BLACK)  # Define button text
+
 # Data arrays
 RARITY_MULTIPLIERS = {
     "Common": 1,
@@ -62,6 +76,3 @@ QUALITY_MULTIPLIERS = {
     "Good": 3,
     "Excellent": 5
 }
-
-# Testing settings (might change)
-BUTTON_Y = INVENTORY_Y + (INVENTORY_ROWS * (SLOT_SIZE + SLOT_MARGIN)) + 30
