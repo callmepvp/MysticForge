@@ -1,0 +1,5 @@
+Rarities:
+Common -> Rare -> Epic -> Legendary -> Mythic
+
+Qualities:
+Poor -> Bad -> Average -> Good -> Excellent
