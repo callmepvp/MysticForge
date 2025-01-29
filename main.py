@@ -49,6 +49,7 @@ hovered_item = None
 clicked_item = None
 
 upgrade_popup_open = False
+dismantle_popup_open = False
 mouse_clicked = False
 material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
 
@@ -262,13 +263,13 @@ while running:
     # Draw the appropriate tab content
     if player.current_tab == "I":
         # Infobox background
-        info_box_width = 200
-        info_box_height = 160
-        margin = 20 
+        info_box_width = INFO_BOX_WIDTH
+        info_box_height = INFO_BOX_HEIGHT
+        margin = INFO_BOX_MARGIN
 
         info_box_x = SCREEN_WIDTH - info_box_width - margin  # Align to right edge
-        info_box_y = INFO_BOX_Y  # Keep the same Y position
-        background_rect = pygame.Rect(info_box_x - 10, info_box_y - 10, 220, 180)
+        info_box_y = INFO_BOX_Y
+        background_rect = pygame.Rect(info_box_x, info_box_y, info_box_width, info_box_height)
         pygame.draw.rect(screen, LIGHT_GRAY, background_rect)  # Background for info box
 
         # Draw Inventory header
@@ -296,13 +297,13 @@ while running:
         screen.blit(material_label_text, (MATERIALS_X, MATERIALS_Y - 25))
     elif player.current_tab == "F":
         # Infobox background
-        info_box_width = 200
-        info_box_height = 160
-        margin = 20 
+        info_box_width = INFO_BOX_WIDTH
+        info_box_height = INFO_BOX_HEIGHT
+        margin = INFO_BOX_MARGIN
 
         info_box_x = SCREEN_WIDTH - info_box_width - margin  # Align to right edge
         info_box_y = INFO_BOX_Y  # Keep the same Y position
-        background_rect = pygame.Rect(info_box_x - 10, info_box_y - 10, 220, 180)
+        background_rect = pygame.Rect(info_box_x, info_box_y, info_box_width, info_box_height)
         pygame.draw.rect(screen, LIGHT_GRAY, background_rect)  # Background for info box
         draw_forge_inventory(screen, forge_inventory)
 
@@ -314,9 +315,9 @@ while running:
     
     ###### HANDLE EVENTS FOR HOVERED AND CLICKED ITEMS
     if hovered_item:
-        info_box_width = 200
-        info_box_height = 160
-        margin = 20  # Distance from the right edge
+        info_box_width = INFO_BOX_WIDTH
+        info_box_height = INFO_BOX_HEIGHT
+        margin = INFO_BOX_MARGIN
 
         info_box_x = SCREEN_WIDTH - info_box_width - margin  # Align to right edge
         info_box_y = INFO_BOX_Y  # Keep the same Y position
@@ -370,13 +371,24 @@ while running:
         screen.blit(scrap_text, scrap_text_rect)
 
         # Handle button clicks
-        if pygame.mouse.get_pressed()[0] and pygame.Rect(rect_x, rect_y, rect_width, rect_height).collidepoint(pygame.mouse.get_pos()):
-            if not mouse_clicked:  # Only toggle once per click
-                # Toggle the upgrade popup
-                upgrade_popup_open = not upgrade_popup_open
-                mouse_clicked = True  # Set the flag to prevent multiple toggles
-        
-        if not pygame.mouse.get_pressed()[0]:  # Mouse button released
+        if pygame.mouse.get_pressed()[0]:
+            mouse_pos = pygame.mouse.get_pos()
+
+            # Clicking the Upgrade button
+            if pygame.Rect(rect_x, rect_y, rect_width, rect_height).collidepoint(mouse_pos):
+                if not mouse_clicked:
+                    upgrade_popup_open = not upgrade_popup_open
+                    dismantle_popup_open = False  # Close dismantle popup if open
+                    mouse_clicked = True  
+
+            # Clicking the Scrap button (Dismantle)
+            elif scrap_rect.collidepoint(mouse_pos):
+                if not mouse_clicked:
+                    dismantle_popup_open = not dismantle_popup_open
+                    upgrade_popup_open = False  # Close upgrade popup if open
+                    mouse_clicked = True  
+
+        if not pygame.mouse.get_pressed()[0]:  # Reset mouse click flag when released
             mouse_clicked = False
 
         # Handle menu interactions
@@ -389,6 +401,7 @@ while running:
 
             # Draw the upgrade rectangle
             pygame.draw.rect(screen, LIGHT_GRAY, (upgrade_rect_x, upgrade_rect_y, upgrade_rect_width, upgrade_rect_height))
+            pygame.draw.rect(screen, BLACK, (upgrade_rect_x, upgrade_rect_y, upgrade_rect_width, upgrade_rect_height), 2)
 
             # Draw the upgrade contents
             current_text = FONT.render("Current", True, BLACK)
@@ -545,9 +558,19 @@ while running:
                     mouse_clicked = True
 
             if not pygame.mouse.get_pressed()[0]:
-                mouse_clicked = False
-        else:
+                mouse_clicked = False    
+        if not upgrade_popup_open:
             material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
+
+        if dismantle_popup_open:
+            # Create the dismantle pop-up rectangle
+            dismantle_rect_width = 250
+            dismantle_rect_height = 120
+            dismantle_rect_x = (SCREEN_WIDTH - dismantle_rect_width) // 2
+            dismantle_rect_y = scrap_rect_y + rect_height + 50
+
+            pygame.draw.rect(screen, LIGHT_GRAY, (dismantle_rect_x, dismantle_rect_y, dismantle_rect_width, dismantle_rect_height))
+            pygame.draw.rect(screen, BLACK, (dismantle_rect_x, dismantle_rect_y, dismantle_rect_width, dismantle_rect_height), 2)  # Bo
 
     pygame.display.flip()
     clock.tick(60)
