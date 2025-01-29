@@ -262,8 +262,14 @@ while running:
     # Draw the appropriate tab content
     if player.current_tab == "I":
         # Infobox background
-        background_rect = pygame.Rect(INFO_BOX_X - 10, INFO_BOX_Y - 10, 220, 180)
-        pygame.draw.rect(screen, LIGHT_GRAY, background_rect)
+        info_box_width = 200
+        info_box_height = 160
+        margin = 20 
+
+        info_box_x = SCREEN_WIDTH - info_box_width - margin  # Align to right edge
+        info_box_y = INFO_BOX_Y  # Keep the same Y position
+        background_rect = pygame.Rect(info_box_x - 10, info_box_y - 10, 220, 180)
+        pygame.draw.rect(screen, LIGHT_GRAY, background_rect)  # Background for info box
 
         # Draw Inventory header
         header_text = HEADER_FONT.render("Inventory", True, BLACK)
@@ -290,8 +296,14 @@ while running:
         screen.blit(material_label_text, (MATERIALS_X, MATERIALS_Y - 25))
     elif player.current_tab == "F":
         # Infobox background
-        background_rect = pygame.Rect(INFO_BOX_X - 10, INFO_BOX_Y - 10, 220, 180)
-        pygame.draw.rect(screen, LIGHT_GRAY, background_rect)
+        info_box_width = 200
+        info_box_height = 160
+        margin = 20 
+
+        info_box_x = SCREEN_WIDTH - info_box_width - margin  # Align to right edge
+        info_box_y = INFO_BOX_Y  # Keep the same Y position
+        background_rect = pygame.Rect(info_box_x - 10, info_box_y - 10, 220, 180)
+        pygame.draw.rect(screen, LIGHT_GRAY, background_rect)  # Background for info box
         draw_forge_inventory(screen, forge_inventory)
 
     # Draw dragged item
@@ -302,7 +314,14 @@ while running:
     
     ###### HANDLE EVENTS FOR HOVERED AND CLICKED ITEMS
     if hovered_item:
-        info_box_rect = pygame.Rect(INFO_BOX_X, INFO_BOX_Y, 200, 160)
+        info_box_width = 200
+        info_box_height = 160
+        margin = 20  # Distance from the right edge
+
+        info_box_x = SCREEN_WIDTH - info_box_width - margin  # Align to right edge
+        info_box_y = INFO_BOX_Y  # Keep the same Y position
+
+        info_box_rect = pygame.Rect(info_box_x, info_box_y, info_box_width, info_box_height)
         pygame.draw.rect(screen, LIGHTER_GRAY, info_box_rect)  # Info box background
         pygame.draw.rect(screen, BLACK, info_box_rect, 2)  # Border of info box
 
@@ -312,10 +331,10 @@ while running:
         item_rarity_text = INFO_FONT.render(f"Rarity: {hovered_item.rarity}", True, BLACK)
         item_quality_text = INFO_FONT.render(f"Quality: {hovered_item.quality}", True, BLACK)
 
-        screen.blit(item_name_text, (INFO_BOX_X + 10, INFO_BOX_Y + 10))
-        screen.blit(item_level_text, (INFO_BOX_X + 10, INFO_BOX_Y + 40))
-        screen.blit(item_rarity_text, (INFO_BOX_X + 10, INFO_BOX_Y + 70))
-        screen.blit(item_quality_text, (INFO_BOX_X + 10, INFO_BOX_Y + 100))
+        screen.blit(item_name_text, (info_box_x + 10, info_box_y + 10))
+        screen.blit(item_level_text, (info_box_x + 10, info_box_y + 40))
+        screen.blit(item_rarity_text, (info_box_x + 10, info_box_y + 70))
+        screen.blit(item_quality_text, (info_box_x + 10, info_box_y + 100))
 
     if clicked_item:
         # Draw the item name text at the top center
@@ -391,6 +410,7 @@ while running:
             material_y = upgrade_rect_y + (upgrade_rect_height // 2) - (material_square_size * 3) // 2  # Center them vertically
 
             # Create the material squares
+            no_materials = True
             for row in range(materials_inventory.rows):
                 for col in range(materials_inventory.cols):
                     material = materials_inventory.slots[row][col] 
@@ -412,13 +432,17 @@ while running:
                         screen.blit(quantity_text, (text_x, text_y))
 
                         # Handle material upgrade clicks
-                        if material_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+                        if material.quantity > 0 and material_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
                             if not mouse_clicked:  # Prevent multiple clicks in one frame
                                 material_click_counts[material] += 1
                                 mouse_clicked = True
+                                no_materials = False # We have at least one material
 
             if not pygame.mouse.get_pressed()[0]:
                 mouse_clicked = False
+
+            if no_materials:
+                print("No materials!")
 
             # Calculate the total XP for the upgrades
             total_xp = 0
@@ -484,6 +508,44 @@ while running:
             preview_valor_text_x = upgrade_rect_x + upgrade_rect_width - preview_valor_text.get_width() - 10  # Right-aligned
             preview_valor_text_y = upgrade_rect_y + upgrade_rect_height - 30  # Place below the XP text
             screen.blit(preview_valor_text, (preview_valor_text_x, preview_valor_text_y))
+
+            # Confirm Upgrade Button
+            confirm_button_width = 150
+            confirm_button_height = 40
+            confirm_button_x = (SCREEN_WIDTH - confirm_button_width) // 2
+            confirm_button_y = upgrade_rect_y + upgrade_rect_height + 10
+            confirm_button_rect = pygame.Rect(confirm_button_x, confirm_button_y, confirm_button_width, confirm_button_height)
+
+            # Hover effect
+            button_color = GRAY if confirm_button_rect.collidepoint(pygame.mouse.get_pos()) else DARK_GRAY
+            pygame.draw.rect(screen, button_color, confirm_button_rect)
+
+            # Center text inside button
+            confirm_text = FONT.render("Confirm Upgrade", True, WHITE)
+            confirm_text_x = confirm_button_x + (confirm_button_width - confirm_text.get_width()) // 2
+            confirm_text_y = confirm_button_y + (confirm_button_height - confirm_text.get_height()) // 2
+            screen.blit(confirm_text, (confirm_text_x, confirm_text_y))
+
+            # Handle confirm upgrade click
+            if confirm_button_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+                if not mouse_clicked:  # Prevent multiple clicks
+                    if total_xp > 0:
+                        # Apply the upgrade
+                        clicked_item.level = new_level
+                        clicked_item.xp = new_xp
+                        clicked_item.valorValue = new_valor  # Update valor
+
+                        # Deduct used materials
+                        for material, clicks in material_click_counts.items():
+                            if clicks > 0 and material.quantity >= clicks:
+                                material.quantity -= clicks
+
+                        # Reset material click counts
+                        material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
+                    mouse_clicked = True
+
+            if not pygame.mouse.get_pressed()[0]:
+                mouse_clicked = False
         else:
             material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
 

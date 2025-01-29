@@ -2,7 +2,7 @@
 import pygame
 
 # Game settings
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+SCREEN_WIDTH, SCREEN_HEIGHT = 1200, 800
 GAME_NAME = "Mystic Forge"
 
 # Colors
