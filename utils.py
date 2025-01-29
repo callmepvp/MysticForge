@@ -2,6 +2,9 @@
 # Other imports
 from constants import *
 
+def get_xp_threshold(level):
+    return 100 * (2 ** (level - 1))
+
 def calculate_valor(item):
     # Base value is used to normalize the calculation (e.g., 10)
     base_value = 10

@@ -7,7 +7,7 @@ import copy
 # Other imports
 from constants import *
 from player import Player
-from utils import draw_tabs, sort_items_by_rarity
+from utils import draw_tabs, sort_items_by_rarity, get_xp_threshold
 from item import Item, Material
 
 # Game setup
@@ -47,6 +47,10 @@ dragged_item = None
 dragged_item_original_slot = None  # Track the original slot of the dragged item
 hovered_item = None
 clicked_item = None
+
+upgrade_popup_open = False
+mouse_clicked = False
+material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
 
 ###### INVENTORY FUNCTIONS
 # Handle dragging and dropping of items in the inventory
@@ -139,7 +143,7 @@ def handle_item_hover(mouse_pos):
 
 # Handle tab switching
 def handle_tab_switching(event):
-    global clicked_item
+    global clicked_item, material_click_counts, upgrade_popup_open
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         mouse_pos = pygame.mouse.get_pos()
 
@@ -161,11 +165,16 @@ def handle_tab_switching(event):
 
             # Clear the forge upgrading screen
             clicked_item = None
+            upgrade_popup_open = False
+
+            # Clear the upgraded materials selection
+            material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
 
         # Handle tab switching (Forge tab)
         if tab_forge_rect.collidepoint(mouse_pos) and player.current_tab != "F":
             player.current_tab = "F"
 
+            # Store every item's original location when switching tabs
             player_items = []
             for row in range(INVENTORY_ROWS):
                 for col in range(INVENTORY_COLS):
@@ -180,7 +189,7 @@ def handle_tab_switching(event):
                     print("Forge inventory is full!")
 
 def handle_item_click(event, forge_inventory):
-    global clicked_item
+    global clicked_item, upgrade_popup_open
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
         mouse_pos = pygame.mouse.get_pos()
         
@@ -190,6 +199,8 @@ def handle_item_click(event, forge_inventory):
                 for col in range(forge_inventory.cols):
                     item = forge_inventory.slots[row][col]
                     if item and item.rect.collidepoint(mouse_pos):
+                        if clicked_item != item:  # If a new item is clicked
+                            upgrade_popup_open = False  # Turn off the upgrade popup
                         clicked_item = item
                         break
 
@@ -223,9 +234,6 @@ def draw_forge_inventory(screen, forge_inventory):
             item_name_text_x = item.rect.centerx - item_name_text.get_width() // 2
             item_name_text_y = item.rect.bottom - item_name_text.get_height() - 5  # 5 pixels above the bottom
             screen.blit(item_name_text, (item_name_text_x, item_name_text_y))
-
-upgrade_popup_open = False
-mouse_clicked = False
 
 ###### MAIN CYCLE
 while running:
@@ -382,6 +390,7 @@ while running:
             material_x = upgrade_rect_x - material_square_size - material_square_margin  # Position it just to the left of the upgrade rectangle
             material_y = upgrade_rect_y + (upgrade_rect_height // 2) - (material_square_size * 3) // 2  # Center them vertically
 
+            # Create the material squares
             for row in range(materials_inventory.rows):
                 for col in range(materials_inventory.cols):
                     material = materials_inventory.slots[row][col] 
@@ -402,6 +411,62 @@ while running:
                         # Blit the quantity text at the calculated position
                         screen.blit(quantity_text, (text_x, text_y))
 
+                        # Handle material upgrade clicks
+                        if material_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+                            if not mouse_clicked:  # Prevent multiple clicks in one frame
+                                material_click_counts[material] += 1
+                                mouse_clicked = True
+
+            if not pygame.mouse.get_pressed()[0]:
+                mouse_clicked = False
+
+            # Calculate the total XP for the upgrades
+            total_xp = 0
+            for material, clicks in material_click_counts.items():
+                if material == rock_1:
+                    total_xp += clicks * 10
+                elif material == rock_2:
+                    total_xp += clicks * 50
+                elif material == rock_3:
+                    total_xp += clicks * 100
+        
+            # Calculate new level and XP
+            current_level = clicked_item.level
+            current_xp = clicked_item.xp
+            new_xp = current_xp + total_xp
+            new_level = current_level
+
+            while new_level < 10:  # Max level is 10
+                xp_threshold = get_xp_threshold(new_level)  # Get the XP threshold for the current level
+                if new_xp >= xp_threshold:
+                    new_xp -= xp_threshold
+                    new_level += 1
+                else:
+                    break
+
+            # Draw the current level and XP on the left side
+            current_level_text = FONT.render(f"Level {current_level}", True, BLACK)
+            current_level_text_x = upgrade_rect_x + 10  # Left-aligned
+            current_level_text_y = upgrade_rect_y + upgrade_rect_height - 50  # Place above the XP text
+            screen.blit(current_level_text, (current_level_text_x, current_level_text_y))
+
+            current_xp_text = FONT.render(f"+{current_xp} XP", True, BLACK)
+            current_xp_text_x = upgrade_rect_x + 10  # Left-aligned
+            current_xp_text_y = upgrade_rect_y + upgrade_rect_height - 30  # Place below the level text
+            screen.blit(current_xp_text, (current_xp_text_x, current_xp_text_y))
+
+            # Draw the preview of the new level and XP on the right side
+            preview_level_text = FONT.render(f"Level {new_level}", True, BLACK)
+            preview_level_text_x = upgrade_rect_x + upgrade_rect_width - preview_level_text.get_width() - 10  # Right-aligned
+            preview_level_text_y = upgrade_rect_y + upgrade_rect_height - 50  # Place above the XP text
+            screen.blit(preview_level_text, (preview_level_text_x, preview_level_text_y))
+
+            preview_xp_text = FONT.render(f"+{new_xp} XP", True, BLACK)
+            preview_xp_text_x = upgrade_rect_x + upgrade_rect_width - preview_xp_text.get_width() - 10  # Right-aligned
+            preview_xp_text_y = upgrade_rect_y + upgrade_rect_height - 30  # Place below the level text
+            screen.blit(preview_xp_text, (preview_xp_text_x, preview_xp_text_y))
+        else:
+            material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
 
     pygame.display.flip()
     clock.tick(60)
