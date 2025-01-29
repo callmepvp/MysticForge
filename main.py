@@ -7,7 +7,7 @@ import copy
 # Other imports
 from constants import *
 from player import Player
-from utils import draw_tabs, sort_items_by_rarity, get_xp_threshold
+from utils import draw_tabs, sort_items_by_rarity, get_xp_threshold, calculate_valor
 from item import Item, Material
 
 # Game setup
@@ -303,7 +303,7 @@ while running:
     ###### HANDLE EVENTS FOR HOVERED AND CLICKED ITEMS
     if hovered_item:
         info_box_rect = pygame.Rect(INFO_BOX_X, INFO_BOX_Y, 200, 160)
-        pygame.draw.rect(screen, INFO_BOX_COLOR, info_box_rect)  # Info box background
+        pygame.draw.rect(screen, LIGHTER_GRAY, info_box_rect)  # Info box background
         pygame.draw.rect(screen, BLACK, info_box_rect, 2)  # Border of info box
 
         # Display item info
@@ -364,7 +364,7 @@ while running:
         if upgrade_popup_open:
             # Create the upgrade rectangle that pops up below the "Upgrade Level"
             upgrade_rect_width = 250  # Slightly bigger width
-            upgrade_rect_height = 100  # Taller height for the upgrade pop-up
+            upgrade_rect_height = 120  # Taller height for the upgrade pop-up
             upgrade_rect_x = (SCREEN_WIDTH - upgrade_rect_width) // 2
             upgrade_rect_y = scrap_rect_y + rect_height + 50
 
@@ -436,35 +436,54 @@ while running:
             new_xp = current_xp + total_xp
             new_level = current_level
 
-            while new_level < 10:  # Max level is 10
-                xp_threshold = get_xp_threshold(new_level)  # Get the XP threshold for the current level
+            while new_level < MAX_ITEM_LEVEL:
+                xp_threshold = get_xp_threshold(new_level)
                 if new_xp >= xp_threshold:
                     new_xp -= xp_threshold
                     new_level += 1
                 else:
                     break
 
+            # Create a dummy item to calculate the new Valor
+            dummy_item = copy.deepcopy(clicked_item)  # Copy the clicked item
+            dummy_item.level = new_level  # Update the dummy item's level
+            dummy_item.xp = new_xp  # Update the dummy item's XP
+
+            # Calculate current and new Valor
+            current_valor = clicked_item.valorValue
+            new_valor = calculate_valor(dummy_item)
+
             # Draw the current level and XP on the left side
             current_level_text = FONT.render(f"Level {current_level}", True, BLACK)
             current_level_text_x = upgrade_rect_x + 10  # Left-aligned
-            current_level_text_y = upgrade_rect_y + upgrade_rect_height - 50  # Place above the XP text
+            current_level_text_y = upgrade_rect_y + upgrade_rect_height - 70
             screen.blit(current_level_text, (current_level_text_x, current_level_text_y))
 
             current_xp_text = FONT.render(f"+{current_xp} XP", True, BLACK)
             current_xp_text_x = upgrade_rect_x + 10  # Left-aligned
-            current_xp_text_y = upgrade_rect_y + upgrade_rect_height - 30  # Place below the level text
+            current_xp_text_y = upgrade_rect_y + upgrade_rect_height - 50
             screen.blit(current_xp_text, (current_xp_text_x, current_xp_text_y))
+
+            current_valor_text = FONT.render(f"Valor: {current_valor:.2f}", True, BLACK)
+            current_valor_text_x = upgrade_rect_x + 10  # Left-aligned
+            current_valor_text_y = upgrade_rect_y + upgrade_rect_height - 30  # Place below the XP text
+            screen.blit(current_valor_text, (current_valor_text_x, current_valor_text_y))
 
             # Draw the preview of the new level and XP on the right side
             preview_level_text = FONT.render(f"Level {new_level}", True, BLACK)
             preview_level_text_x = upgrade_rect_x + upgrade_rect_width - preview_level_text.get_width() - 10  # Right-aligned
-            preview_level_text_y = upgrade_rect_y + upgrade_rect_height - 50  # Place above the XP text
+            preview_level_text_y = upgrade_rect_y + upgrade_rect_height - 70  # Place above the XP text
             screen.blit(preview_level_text, (preview_level_text_x, preview_level_text_y))
 
             preview_xp_text = FONT.render(f"+{new_xp} XP", True, BLACK)
             preview_xp_text_x = upgrade_rect_x + upgrade_rect_width - preview_xp_text.get_width() - 10  # Right-aligned
-            preview_xp_text_y = upgrade_rect_y + upgrade_rect_height - 30  # Place below the level text
+            preview_xp_text_y = upgrade_rect_y + upgrade_rect_height - 50  # Place below the level text
             screen.blit(preview_xp_text, (preview_xp_text_x, preview_xp_text_y))
+
+            preview_valor_text = FONT.render(f"Valor: {new_valor:.2f}", True, BLACK)
+            preview_valor_text_x = upgrade_rect_x + upgrade_rect_width - preview_valor_text.get_width() - 10  # Right-aligned
+            preview_valor_text_y = upgrade_rect_y + upgrade_rect_height - 30  # Place below the XP text
+            screen.blit(preview_valor_text, (preview_valor_text_x, preview_valor_text_y))
         else:
             material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
 

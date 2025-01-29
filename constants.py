@@ -16,8 +16,6 @@ BLUE = (100, 149, 237)
 GREEN = (34, 139, 34)
 RED = (237, 100, 100)
 
-INFO_BOX_COLOR = (240, 240, 240)
-
 # Fonts
 pygame.init()
 FONT = pygame.font.Font(None, 24)
@@ -80,3 +78,6 @@ QUALITY_MULTIPLIERS = {
     "Good": 3,
     "Excellent": 5
 }
+
+# Game data
+MAX_ITEM_LEVEL = 10
