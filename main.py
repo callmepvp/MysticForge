@@ -16,9 +16,9 @@ pygame.display.set_caption(GAME_NAME)
 
 # Materials & items
 #### Upgrade Rocks
-rock_1 = Material("Stone", "Common")
-rock_2 = Material("Iron", "Rare")
-rock_3 = Material("Diamond", "Epic")
+rock_1 = Material("Ironheart Scraps", "Common", 5)
+rock_2 = Material("Runed Obsidian", "Rare", 5)
+rock_3 = Material("Godforge Ingot", "Epic", 5)
 
 materials = [rock_1, rock_2, rock_3]
 
@@ -52,6 +52,23 @@ upgrade_popup_open = False
 dismantle_popup_open = False
 mouse_clicked = False
 material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
+
+###### MISC FUNCTIONS
+
+def calculate_dismantle_materials(item):
+    material_type = None
+    multiplier = 1.0
+
+    # Determine material type based on rarity
+    if item.rarity in ["Common", "Rare"]:
+        material_type = rock_1  # Ironheart Scraps
+    elif item.rarity in ["Epic", "Legendary"]:
+        material_type = rock_2  # Runed Obsidian
+    elif item.rarity == "Mythic":
+        material_type = rock_3  # Godforge Ingot
+
+    material_quantity = int(item.valorValue * multiplier)
+    return material_type, material_quantity
 
 ###### INVENTORY FUNCTIONS
 # Handle dragging and dropping of items in the inventory
@@ -144,7 +161,7 @@ def handle_item_hover(mouse_pos):
 
 # Handle tab switching
 def handle_tab_switching(event):
-    global clicked_item, material_click_counts, upgrade_popup_open
+    global clicked_item, material_click_counts, upgrade_popup_open, dismantle_popup_open
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         mouse_pos = pygame.mouse.get_pos()
 
@@ -167,6 +184,7 @@ def handle_tab_switching(event):
             # Clear the forge upgrading screen
             clicked_item = None
             upgrade_popup_open = False
+            dismantle_popup_open = False
 
             # Clear the upgraded materials selection
             material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
@@ -190,7 +208,7 @@ def handle_tab_switching(event):
                     print("Forge inventory is full!")
 
 def handle_item_click(event, forge_inventory):
-    global clicked_item, upgrade_popup_open
+    global clicked_item, upgrade_popup_open, dismantle_popup_open
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
         mouse_pos = pygame.mouse.get_pos()
         
@@ -202,6 +220,7 @@ def handle_item_click(event, forge_inventory):
                     if item and item.rect.collidepoint(mouse_pos):
                         if clicked_item != item:  # If a new item is clicked
                             upgrade_popup_open = False  # Turn off the upgrade popup
+                            dismantle_popup_open = False
                         clicked_item = item
                         break
 
@@ -328,14 +347,16 @@ while running:
 
         # Display item info
         item_name_text = INFO_FONT.render(f"Name: {hovered_item.name} (+{hovered_item.valorValue:.2f})", True, BLACK)
+        item_type_text = INFO_FONT.render(f"Type: {hovered_item.type}", True, BLACK)
         item_level_text = INFO_FONT.render(f"Level: {hovered_item.level}", True, BLACK)
         item_rarity_text = INFO_FONT.render(f"Rarity: {hovered_item.rarity}", True, BLACK)
         item_quality_text = INFO_FONT.render(f"Quality: {hovered_item.quality}", True, BLACK)
 
         screen.blit(item_name_text, (info_box_x + 10, info_box_y + 10))
-        screen.blit(item_level_text, (info_box_x + 10, info_box_y + 40))
-        screen.blit(item_rarity_text, (info_box_x + 10, info_box_y + 70))
-        screen.blit(item_quality_text, (info_box_x + 10, info_box_y + 100))
+        screen.blit(item_type_text, (info_box_x + 10, info_box_y + 40))
+        screen.blit(item_level_text, (info_box_x + 10, info_box_y + 70))
+        screen.blit(item_rarity_text, (info_box_x + 10, info_box_y + 100))
+        screen.blit(item_quality_text, (info_box_x + 10, info_box_y + 130))
 
     if clicked_item:
         # Draw the item name text at the top center
@@ -445,7 +466,7 @@ while running:
                         screen.blit(quantity_text, (text_x, text_y))
 
                         # Handle material upgrade clicks
-                        if material.quantity > 0 and material_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+                        if material.quantity - material_click_counts[material] - 1 >= 0 and material_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
                             if not mouse_clicked:  # Prevent multiple clicks in one frame
                                 material_click_counts[material] += 1
                                 mouse_clicked = True
@@ -453,9 +474,6 @@ while running:
 
             if not pygame.mouse.get_pressed()[0]:
                 mouse_clicked = False
-
-            if no_materials:
-                print("No materials!")
 
             # Calculate the total XP for the upgrades
             total_xp = 0
@@ -534,7 +552,7 @@ while running:
             pygame.draw.rect(screen, button_color, confirm_button_rect)
 
             # Center text inside button
-            confirm_text = FONT.render("Confirm Upgrade", True, WHITE)
+            confirm_text = FONT.render("Confirm", True, WHITE)
             confirm_text_x = confirm_button_x + (confirm_button_width - confirm_text.get_width()) // 2
             confirm_text_y = confirm_button_y + (confirm_button_height - confirm_text.get_height()) // 2
             screen.blit(confirm_text, (confirm_text_x, confirm_text_y))
@@ -569,8 +587,73 @@ while running:
             dismantle_rect_x = (SCREEN_WIDTH - dismantle_rect_width) // 2
             dismantle_rect_y = scrap_rect_y + rect_height + 50
 
+            # Draw the dismantle pop-up background and border
             pygame.draw.rect(screen, LIGHT_GRAY, (dismantle_rect_x, dismantle_rect_y, dismantle_rect_width, dismantle_rect_height))
-            pygame.draw.rect(screen, BLACK, (dismantle_rect_x, dismantle_rect_y, dismantle_rect_width, dismantle_rect_height), 2)  # Bo
+            pygame.draw.rect(screen, BLACK, (dismantle_rect_x, dismantle_rect_y, dismantle_rect_width, dismantle_rect_height), 2)
+
+            # Calculate materials from dismantling
+            material_type, material_quantity = calculate_dismantle_materials(clicked_item)
+
+            # Display the materials the player will receive
+            materials_text = FONT.render(f"You will receive:", True, BLACK)
+            materials_text_x = dismantle_rect_x + (dismantle_rect_width - materials_text.get_width()) // 2  # Center text
+            materials_text_y = dismantle_rect_y + 10
+            screen.blit(materials_text, (materials_text_x, materials_text_y))
+
+            material_text = FONT.render(f"{material_quantity} x {material_type.name}", True, BLACK)
+            material_text_x = dismantle_rect_x + (dismantle_rect_width - material_text.get_width()) // 2  # Center text
+            material_text_y = materials_text_y + 30
+            screen.blit(material_text, (material_text_x, material_text_y))
+
+            # Draw the material icon
+            material_icon_rect = pygame.Rect(material_text_x + material_text.get_width() + 10, material_text_y, 30, 30)
+            pygame.draw.rect(screen, material_type.color, material_icon_rect)
+            pygame.draw.rect(screen, BLACK, material_icon_rect, 2)
+
+            # Confirm Dismantle Button
+            confirm_button_width = 150
+            confirm_button_height = 40
+            confirm_button_x = (SCREEN_WIDTH - confirm_button_width) // 2  # Center button horizontally
+            confirm_button_y = dismantle_rect_y + dismantle_rect_height + 10  # Place below the dismantle UI
+            confirm_button_rect = pygame.Rect(confirm_button_x, confirm_button_y, confirm_button_width, confirm_button_height)
+
+            # Hover effect
+            button_color = GRAY if confirm_button_rect.collidepoint(pygame.mouse.get_pos()) else DARK_GRAY
+            pygame.draw.rect(screen, button_color, confirm_button_rect)
+
+            # Center text inside button
+            confirm_text = FONT.render("Confirm", True, WHITE)
+            confirm_text_x = confirm_button_x + (confirm_button_width - confirm_text.get_width()) // 2
+            confirm_text_y = confirm_button_y + (confirm_button_height - confirm_text.get_height()) // 2
+            screen.blit(confirm_text, (confirm_text_x, confirm_text_y))
+
+            # Handle button clicks
+            if pygame.mouse.get_pressed()[0]:
+                if not mouse_clicked:  # Prevent multiple clicks in one frame
+                    mouse_pos = pygame.mouse.get_pos()
+
+                    # Confirm dismantle
+                    if confirm_button_rect.collidepoint(mouse_pos):
+                        # Add materials to the player's inventory
+                        material_type.quantity += material_quantity
+
+                        # Remove the dismantled item from the inventory
+                        for row in range(inventory.rows):
+                            for col in range(inventory.cols):
+                                if inventory.slots[row][col] == clicked_item:
+                                    inventory.slots[row][col] = None
+                                    break
+
+                        # Close the dismantle pop-up
+                        dismantle_popup_open = False
+
+                    mouse_clicked = True
+
+            # Reset mouse_clicked when the mouse button is released
+            if not pygame.mouse.get_pressed()[0]:
+                mouse_clicked = False
+
+
 
     pygame.display.flip()
     clock.tick(60)

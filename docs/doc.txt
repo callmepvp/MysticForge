@@ -3,3 +3,17 @@ Common -> Rare -> Epic -> Legendary -> Mythic
 
 Qualities:
 Poor -> Bad -> Average -> Good -> Excellent
+
+Types:
+Helmet, Chestplate, Leggings, Boots
+Back
+Primary, Secondary
+Necklace
+Ring 1, Ring 2
+
+Item breakdown materials:
+Gained item amount is based on item's valor.
+Gained item type is based on the following scheme:
+Common, Rare -> Ironheart Scraps (rock_1)
+Epic, Legendary -> Runed Obsidian (rock_2)
+Mythic -> Godforge Ingot (rock_3)

@@ -8,11 +8,15 @@ class Item:
     def __init__(self, name, color, level=1, rarity="Common", quality="Poor"):
         self.name = name
         self.color = color
+        
         self.level = level
         self.rarity = rarity
         self.quality = quality
+        self.type = "NONE"
+
         self.valorValue = 0
         self.xp = 0
+
         self.uid = str(uuid.uuid4()) # Generate a random unique ID for each item instance
 
         self.rect = pygame.Rect(0, 0, SLOT_SIZE - 10, SLOT_SIZE - 10)  # Smaller than the slot
