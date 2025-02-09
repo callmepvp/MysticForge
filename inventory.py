@@ -106,3 +106,6 @@ class ForgeInventory:
                     self.slots[row][col] = item
                     return True  # Successfully added
         return False  # Inventory is full
+    
+    def remove_item(self, row, col):
+        self.slots[row][col] = None

@@ -637,23 +637,28 @@ while running:
                         # Add materials to the player's inventory
                         material_type.quantity += material_quantity
 
-                        # Remove the dismantled item from the inventory
+                        # Remove the dismantled item from the inventory and forge inventory
                         for row in range(inventory.rows):
                             for col in range(inventory.cols):
                                 if inventory.slots[row][col] == clicked_item:
                                     inventory.slots[row][col] = None
                                     break
 
+                        for row in range(forge_inventory.rows):
+                            for col in range(forge_inventory.cols):
+                                if forge_inventory.slots[row][col] == clicked_item:
+                                    forge_inventory.slots[row][col] = None
+                                    break
+
                         # Close the dismantle pop-up
                         dismantle_popup_open = False
+                        clicked_item = None # Reset the clicked item as it does not exist anymore
 
                     mouse_clicked = True
 
             # Reset mouse_clicked when the mouse button is released
             if not pygame.mouse.get_pressed()[0]:
                 mouse_clicked = False
-
-
 
     pygame.display.flip()
     clock.tick(60)
