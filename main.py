@@ -24,7 +24,7 @@ materials = [rock_1, rock_2, rock_3]
 
 #### All Items
 available_items = [
-    Item("Sword", RED, rarity="Common", quality="Poor"),
+    Item("Terrablade", RED, rarity="Common", quality="Poor"),
     Item("Shield", BLUE, rarity="Rare", quality="Good"),
     Item("Bow", BLUE, rarity="Common", quality="Average"),
     Item("Potion", RED, rarity="Common", quality="Bad"),
@@ -57,7 +57,7 @@ material_click_counts = {rock_1: 0, rock_2: 0, rock_3: 0}
 
 def calculate_dismantle_materials(item):
     material_type = None
-    multiplier = 1.0
+    multiplier = 2  # Adjust this based on balance
 
     # Determine material type based on rarity
     if item.rarity in ["Common", "Rare"]:
@@ -67,7 +67,8 @@ def calculate_dismantle_materials(item):
     elif item.rarity == "Mythic":
         material_type = rock_3  # Godforge Ingot
 
-    material_quantity = int(item.valorValue * multiplier)
+    # Calculate material quantity based on item valor
+    material_quantity = max(1, int(item.valorValue * multiplier))  # Ensure at least 1 material
     return material_type, material_quantity
 
 ###### INVENTORY FUNCTIONS
@@ -605,8 +606,12 @@ while running:
             material_text_y = materials_text_y + 30
             screen.blit(material_text, (material_text_x, material_text_y))
 
-            # Draw the material icon
-            material_icon_rect = pygame.Rect(material_text_x + material_text.get_width() + 10, material_text_y, 30, 30)
+            # Draw the material icon (centered below the material text)
+            material_icon_size = 30
+            material_icon_x = material_text_x + (material_text.get_width() - material_icon_size) // 2  # Center below text
+            material_icon_y = material_text_y + material_text.get_height() + 5  # Place below the text
+            material_icon_rect = pygame.Rect(material_icon_x, material_icon_y, material_icon_size, material_icon_size)
+
             pygame.draw.rect(screen, material_type.color, material_icon_rect)
             pygame.draw.rect(screen, BLACK, material_icon_rect, 2)
 
