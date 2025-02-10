@@ -473,6 +473,13 @@ while running:
                                 mouse_clicked = True
                                 no_materials = False # We have at least one material
 
+                        # Draw the "-N" text next to the material square if it has been clicked
+                        if material in material_click_counts and material_click_counts[material] > 0:
+                            minus_text = FONT.render(f"-{material_click_counts[material]}", True, RED)
+                            minus_text_x = material_rect.x - material_square_size
+                            minus_text_y = material_rect.y + (material_square_size - minus_text.get_height()) // 2
+                            screen.blit(minus_text, (minus_text_x, minus_text_y))
+
             if not pygame.mouse.get_pressed()[0]:
                 mouse_clicked = False
 
